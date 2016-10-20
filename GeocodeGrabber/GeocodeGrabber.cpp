@@ -105,6 +105,9 @@ private:
 public:
 	GeocodeGrabber(std::string tmp_api_key) {
 		api_key = tmp_api_key;
+		longitude = 0.0;
+		latitude = 0.0;
+		formatted_address = "";
 	}
 
 	void PrintPrivate() {
