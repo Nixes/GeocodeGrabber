@@ -52,33 +52,6 @@ private:
 		builder.append_query(U("address"), address.c_str() );
 		builder.append_query(U("key"), api_key.c_str() );
 
-		// print the raw received response
-		client
-			.request(methods::GET, builder.to_string())
-			// continue when the response is available
-			.then([](http_response response) -> pplx::task <utility::string_t> {
-				// if the status is OK extract the body of the response into a JSON value
-				// works only when the content type is application\json
-				if (response.status_code() == status_codes::OK) {
-					//return response.extract_json();				
-					return response.extract_string();
-				}
-
-			})
-			// continue when the JSON value is available
-			.then([](pplx::task<utility::string_t> previousTask) {
-				// get the JSON value from the task and display content from it
-				try {
-					std::string tmp_string = utility::conversions::to_utf8string( previousTask.get() );
-					std::cout << tmp_string;
-					//json::value const & v = previousTask.get();
-					// do something with extracted value
-				} catch (http_exception const & e) {
-					//std::cout << e.what() << std::endl;
-				}
-			})
-			.wait();
-
 		// do another request this time, but this time obtain values from json
 		client
 			.request(methods::GET, builder.to_string())
