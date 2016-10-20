@@ -24,7 +24,14 @@ private:
 	void ParseLongLat(json::value const &value) {
 		std::cout << "ParseLongLat ran\n";
 		if (!value.is_null()) {
-			//auto results = value[L"results"];
+			auto results = value.at(U("results")).at(0); // we only want the first result
+			try {
+				auto geometry = results.at(U("geometry"));
+			} catch (json::json_exception const & e) {
+				std::cout << "Exception parsing long lat " << e.what() << std::endl;
+			}
+			//std::string std_string = utility::conversions::to_utf8string(formatted_address);
+			//std::cout << "Formatted address was: " << std_string << "\n";
 		}
 	}
 
