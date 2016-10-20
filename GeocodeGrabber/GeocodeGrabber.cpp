@@ -16,7 +16,7 @@ using namespace concurrency::streams;       // Asynchronous streams
 
 class GeocodeGrabber {
 private:
-	std::string api_key;
+	std::string geocoding_api_key;
 
 	double longitude;
 	double latitude;
@@ -52,7 +52,6 @@ private:
 		builder.append_query(U("address"), address.c_str() );
 		builder.append_query(U("key"), api_key.c_str() );
 
-		// do another request this time, but this time obtain values from json
 		client
 			.request(methods::GET, builder.to_string())
 			// continue when the response is available
@@ -78,6 +77,41 @@ private:
 			.wait();
 	}
 
+	void GetLongLatFromIp() {
+		// Create http_client to send the request.
+		http_client client(U("https://www.googleapis.com/geolocation/v1/geolocate"));
+
+		// Build request URI and start the request.
+		uri_builder builder = uri_builder();
+		builder.append_query(U("key"), api_key.c_str());
+
+		client
+			.request(methods::GET, builder.to_string())
+			// continue when the response is available
+			.then([](http_response response) -> pplx::task <utility::string_t> {
+				// if the status is OK extract the body of the response into a JSON value
+				// works only when the content type is application\json
+				if (response.status_code() == status_codes::OK) {
+					//return response.extract_json();				
+					return response.extract_string();
+				}
+
+			})
+			// continue when the JSON value is available
+			.then([](pplx::task<utility::string_t> previousTask) {
+				// get the JSON value from the task and display content from it
+				try {
+					std::string tmp_string = utility::conversions::to_utf8string( previousTask.get() );
+					std::cout << tmp_string;
+					//json::value const & v = previousTask.get();
+					// do something with extracted value
+				} catch (http_exception const & e) {
+					//std::cout << e.what() << std::endl;
+				}
+			})
+			.wait();
+	}
+
 public:
 	GeocodeGrabber(std::string tmp_api_key) {
 		api_key = tmp_api_key;
@@ -96,12 +130,18 @@ public:
 		GetLongLatFromAddress(address);
 	}
 
+	void TestIp() {
+		GetLongLatFromIp();
+	}
+
 };
 
 int main() {
 	GeocodeGrabber geocode_test = GeocodeGrabber("AIzaSyD - NPqot8WGQyK0GtcrkMasHPIzKHB - HTo");
 
 	geocode_test.TestApi();
+
+	//geocode_test.TestIp();
 
 	geocode_test.PrintPrivate();
 
