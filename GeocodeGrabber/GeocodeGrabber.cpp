@@ -18,20 +18,25 @@ class GeocodeGrabber {
 private:
 	std::string api_key;
 
-	double logitude;
+	double longitude;
 	double latitude;
+
+	std::string formatted_address;
 
 	void ParseLongLat(json::value const &value) {
 		std::cout << "ParseLongLat ran\n";
 		if (!value.is_null()) {
 			auto results = value.at(U("results")).at(0); // we only want the first result
+
 			try {
 				auto geometry = results.at(U("geometry"));
+				auto formatted_address_t = results.at(U("formatted_address")).as_string();
+
+				// convert this address into something usefull, then print to console
+				formatted_address = utility::conversions::to_utf8string(formatted_address_t);
 			} catch (json::json_exception const & e) {
-				std::cout << "Exception parsing long lat " << e.what() << std::endl;
+				std::cout << "Exception parsing google api result " << e.what() << std::endl;
 			}
-			//std::string std_string = utility::conversions::to_utf8string(formatted_address);
-			//std::cout << "Formatted address was: " << std_string << "\n";
 		}
 	}
 
@@ -100,6 +105,11 @@ private:
 public:
 	GeocodeGrabber(std::string tmp_api_key) {
 		api_key = tmp_api_key;
+	}
+
+	void printPrivate() {
+		std::cout << "Formatted address was: " << formatted_address << std::endl;
+		std::cout << "logitude: " << longitude << " latitude: " << latitude << std::endl;
 	}
 
 	void testApi() {
