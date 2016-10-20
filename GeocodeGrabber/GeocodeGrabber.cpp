@@ -16,7 +16,8 @@ using namespace concurrency::streams;       // Asynchronous streams
 
 class GeocodeGrabber {
 private:
-	std::string geocoding_api_key;
+	std::string geocoding_api_key; // key used for address -> long lat conversions
+	std::string geolocation_api_key; // key used for request ip -> long lat conversions
 
 	double longitude;
 	double latitude;
@@ -50,7 +51,7 @@ private:
 		// Build request URI and start the request.
 		uri_builder builder = uri_builder();
 		builder.append_query(U("address"), address.c_str() );
-		builder.append_query(U("key"), api_key.c_str() );
+		builder.append_query(U("key"), geocoding_api_key.c_str() );
 
 		client
 			.request(methods::GET, builder.to_string())
@@ -83,7 +84,7 @@ private:
 
 		// Build request URI and start the request.
 		uri_builder builder = uri_builder();
-		builder.append_query(U("key"), api_key.c_str());
+		builder.append_query(U("key"), geocoding_api_key.c_str());
 
 		client
 			.request(methods::GET, builder.to_string())
@@ -113,8 +114,9 @@ private:
 	}
 
 public:
-	GeocodeGrabber(std::string tmp_api_key) {
-		api_key = tmp_api_key;
+	GeocodeGrabber(std::string tmp_geocoding_api_key, std::string tmp_geolocation_api_key) {
+		geocoding_api_key = tmp_geocoding_api_key;
+		geolocation_api_key = tmp_geolocation_api_key;
 		longitude = 0.0;
 		latitude = 0.0;
 		formatted_address = "";
@@ -137,7 +139,7 @@ public:
 };
 
 int main() {
-	GeocodeGrabber geocode_test = GeocodeGrabber("AIzaSyD - NPqot8WGQyK0GtcrkMasHPIzKHB - HTo");
+	GeocodeGrabber geocode_test = GeocodeGrabber("AIzaSyD - NPqot8WGQyK0GtcrkMasHPIzKHB - HTo", "AIzaSyBF70jGFpFNUGJFMUOqVLQfTikvKRrdc0U");
 
 	geocode_test.TestApi();
 
