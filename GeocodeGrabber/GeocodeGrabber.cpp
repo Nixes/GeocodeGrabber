@@ -107,12 +107,12 @@ public:
 		api_key = tmp_api_key;
 	}
 
-	void printPrivate() {
+	void PrintPrivate() {
 		std::cout << "Formatted address was: " << formatted_address << std::endl;
 		std::cout << "logitude: " << longitude << " latitude: " << latitude << std::endl;
 	}
 
-	void testApi() {
+	void TestApi() {
 		std::string address = "John St, Hawthorn VIC";
 		GetLongLatFromAddress(address);
 	}
@@ -122,7 +122,9 @@ public:
 int main() {
 	GeocodeGrabber geocode_test = GeocodeGrabber("AIzaSyD - NPqot8WGQyK0GtcrkMasHPIzKHB - HTo");
 
-	geocode_test.testApi();
+	geocode_test.TestApi();
+
+	geocode_test.PrintPrivate();
 
 	system("pause");
 	return 0;
