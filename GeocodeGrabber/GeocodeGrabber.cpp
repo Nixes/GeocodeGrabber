@@ -25,12 +25,15 @@ private:
 	std::string formatted_address;
 
 	void ParseLocation(json::value const &response) {
-		try {
-			auto location = response.at(U("location"));
-			longitude = location.at(U("lng")).as_double();
-			latitude = location.at(U("lat")).as_double();
-		} catch (json::json_exception const & e) {
-			std::cout << "Failed to parse location " << e.what() << std::endl;
+		if (response.has_field(U("location")) ) {
+			try {
+				auto location = response.at(U("location"));
+				longitude = location.at(U("lng")).as_double();
+				latitude = location.at(U("lat")).as_double();
+			}
+			catch (json::json_exception const & e) {
+				std::cout << "Failed to parse location " << e.what() << std::endl;
+			}
 		}
 	}
 
@@ -96,7 +99,7 @@ private:
 		builder.append_query(U("key"), geolocation_api_key.c_str());
 
 		client
-			.request(methods::GET, builder.to_string())
+			.request(methods::POST, builder.to_string())
 			// continue when the response is available
 			.then([](http_response response) -> pplx::task <json::value> {
 			// if the status is OK extract the body of the response into a JSON value
@@ -148,9 +151,9 @@ public:
 int main() {
 	GeocodeGrabber geocode_test = GeocodeGrabber("AIzaSyD - NPqot8WGQyK0GtcrkMasHPIzKHB - HTo", "AIzaSyBF70jGFpFNUGJFMUOqVLQfTikvKRrdc0U");
 
-	geocode_test.TestApi();
+	//geocode_test.TestApi();
 
-	//geocode_test.TestIp();
+	geocode_test.TestIp();
 
 	geocode_test.PrintPrivate();
 
