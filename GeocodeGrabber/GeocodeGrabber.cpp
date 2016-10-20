@@ -21,9 +21,7 @@ private:
 	double logitude;
 	double latitude;
 
-	std::string GetLongLatFromAddress(std::string address) {
-		std::string return_string;
-
+	void GetLongLatFromAddress(std::string address) {
 		// Create http_client to send the request.
 		http_client client(U("https://maps.googleapis.com/maps/api/geocode/json"));
 
@@ -35,7 +33,7 @@ private:
 		client
 			.request(methods::GET, builder.to_string())
 			// continue when the response is available
-			.then([&return_string](http_response response) -> pplx::task <utility::string_t> {
+			.then([](http_response response) -> pplx::task <utility::string_t> {
 				// if the status is OK extract the body of the response into a JSON value
 				// works only when the content type is application\json
 				if (response.status_code() == status_codes::OK) {
@@ -52,22 +50,19 @@ private:
 					std::cout << tmp_string;
 					//json::value const & v = previousTask.get();
 					// do something with extracted value
-					//std::string tmp_string = utility::conversions::to_utf8string( v.as_string() );
-					//return_string = tmp_string;
 				} catch (http_exception const & e) {
 					//std::cout << e.what() << std::endl;
 				}
 			})
 			.wait();
-			return return_string;
 	}
 
 public:
 	GeocodeGrabber() {}
 
 	void testApi() {
-		std::string address = "3793 Australia";
-		std::cout << GetLongLatFromAddress(address);
+		std::string address = "John St, Hawthorn VIC";
+		GetLongLatFromAddress(address);
 	}
 
 };
