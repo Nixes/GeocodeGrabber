@@ -21,6 +21,13 @@ private:
 	double logitude;
 	double latitude;
 
+	void ParseLongLat(json::value const &value) {
+		std::cout << "ParseLongLat ran\n";
+		if (!value.is_null()) {
+			//auto results = value[L"results"];
+		}
+	}
+
 	void GetLongLatFromAddress(std::string address) {
 		// Create http_client to send the request.
 		http_client client(U("https://maps.googleapis.com/maps/api/geocode/json"));
@@ -70,11 +77,11 @@ private:
 				return pplx::task_from_result(json::value());
 			})
 				// continue when the JSON value is available
-			.then([](pplx::task<json::value> previousTask) {
+			.then([this](pplx::task<json::value> previousTask) {
 				// get the JSON value from the task and display content from it
 				try {
 					json::value const & v = previousTask.get();
-					// do something with extracted value
+					ParseLongLat(v);
 				}
 				catch (http_exception const & e) {
 					std::cout << e.what() << std::endl;
