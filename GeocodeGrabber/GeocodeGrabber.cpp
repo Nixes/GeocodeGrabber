@@ -29,11 +29,14 @@ private:
 			auto results = value.at(U("results")).at(0); // we only want the first result
 
 			try {
-				auto geometry = results.at(U("geometry"));
+				auto location = results.at(U("geometry")).at(U("location"));
 				auto formatted_address_t = results.at(U("formatted_address")).as_string();
 
-				// convert this address into something usefull, then print to console
+				// convert this address into something usefull
 				formatted_address = utility::conversions::to_utf8string(formatted_address_t);
+
+				longitude = location.at(U("lng")).as_double();
+				latitude = location.at(U("lat")).as_double();
 			} catch (json::json_exception const & e) {
 				std::cout << "Exception parsing google api result " << e.what() << std::endl;
 			}
