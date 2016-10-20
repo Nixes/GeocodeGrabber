@@ -24,23 +24,32 @@ private:
 
 	std::string formatted_address;
 
-	void ParseLongLat(json::value const &value) {
+	void ParseLocation(json::value const &response) {
+		try {
+			auto location = response.at(U("location"));
+			longitude = location.at(U("lng")).as_double();
+			latitude = location.at(U("lat")).as_double();
+		} catch (json::json_exception const & e) {
+			std::cout << "Failed to parse location " << e.what() << std::endl;
+		}
+	}
+
+	void ParseGeocode(json::value const &value) {
 		std::cout << "ParseLongLat ran\n";
 		if (!value.is_null()) {
 			auto results = value.at(U("results")).at(0); // we only want the first result
 
 			try {
-				auto location = results.at(U("geometry")).at(U("location"));
 				auto formatted_address_t = results.at(U("formatted_address")).as_string();
-
 				// convert this address into something usefull
 				formatted_address = utility::conversions::to_utf8string(formatted_address_t);
-
-				longitude = location.at(U("lng")).as_double();
-				latitude = location.at(U("lat")).as_double();
 			} catch (json::json_exception const & e) {
 				std::cout << "Exception parsing google api result " << e.what() << std::endl;
 			}
+			ParseLocation(results.at(U("geometry")));
+
+		} else {
+			std::cout << "json was null" << std::endl;
 		}
 	}
 
@@ -69,7 +78,7 @@ private:
 				// get the JSON value from the task and display content from it
 				try {
 					json::value const & v = previousTask.get();
-					ParseLongLat(v);
+					ParseGeocode(v);
 				}
 				catch (http_exception const & e) {
 					std::cout << e.what() << std::endl;
@@ -84,32 +93,30 @@ private:
 
 		// Build request URI and start the request.
 		uri_builder builder = uri_builder();
-		builder.append_query(U("key"), geocoding_api_key.c_str());
+		builder.append_query(U("key"), geolocation_api_key.c_str());
 
 		client
 			.request(methods::GET, builder.to_string())
 			// continue when the response is available
-			.then([](http_response response) -> pplx::task <utility::string_t> {
-				// if the status is OK extract the body of the response into a JSON value
-				// works only when the content type is application\json
-				if (response.status_code() == status_codes::OK) {
-					//return response.extract_json();				
-					return response.extract_string();
-				}
-
-			})
+			.then([](http_response response) -> pplx::task <json::value> {
+			// if the status is OK extract the body of the response into a JSON value
+			// works only when the content type is application\json
+			if (response.status_code() == status_codes::OK) {
+				return response.extract_json();
+			}
+			return pplx::task_from_result(json::value());
+		})
 			// continue when the JSON value is available
-			.then([](pplx::task<utility::string_t> previousTask) {
-				// get the JSON value from the task and display content from it
-				try {
-					std::string tmp_string = utility::conversions::to_utf8string( previousTask.get() );
-					std::cout << tmp_string;
-					//json::value const & v = previousTask.get();
-					// do something with extracted value
-				} catch (http_exception const & e) {
-					//std::cout << e.what() << std::endl;
-				}
-			})
+			.then([this](pplx::task<json::value> previousTask) {
+			// get the JSON value from the task and display content from it
+			try {
+				json::value const & v = previousTask.get();
+				ParseLocation(v);
+			}
+			catch (http_exception const & e) {
+				std::cout << e.what() << std::endl;
+			}
+		})
 			.wait();
 	}
 
