@@ -124,6 +124,19 @@ private:
 			.wait();
 	}
 
+	// TODO: Improve variable names
+	int GetDayOfYear() {
+		time_t c_now = time(0);
+		struct tm now;
+		localtime_s(&now, &c_now);
+
+		int a = floor(275 * now.tm_mon / 9);
+		int b = floor( (now.tm_mon + 9) /12 );
+		int c = (1 + floor((now.tm_year - 4 * floor(now.tm_year / 4) + 2) / 3));
+
+		return a - (b * c) + now.tm_mday - 30;
+	}
+
 public:
 	GeocodeGrabber(std::string tmp_geocoding_api_key, std::string tmp_geolocation_api_key) {
 		geocoding_api_key = tmp_geocoding_api_key;
@@ -154,6 +167,7 @@ public:
 
 	void TestIp() {
 		GetLongLatFromIp();
+		std::cout << "Day of year: " << GetDayOfYear() << std::endl;
 	}
 
 };
