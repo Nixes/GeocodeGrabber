@@ -199,6 +199,10 @@ private:
 		}
 		float hours = tmp_hours / 15;
 
+		// calc local mean time of sunset/sunrise
+		float mean_sun_transition = hours + right_ascension_hours - (0.06571 * t) - 6.622;
+
+		return mean_sun_transition;
 	}
 public:
 	GeocodeGrabber(std::string tmp_geocoding_api_key, std::string tmp_geolocation_api_key) {
@@ -233,8 +237,8 @@ public:
 		GetLongLatFromIp();
 		std::cout << "Day of year: " << GetDayOfYear() << std::endl;
 
-		std::cout << "SunriseLongHour: " << GetSunriseLongHour() << std::endl;
-		std::cout << "SunsetLongHour: " << GetSunsetLongHour() << std::endl;
+		std::cout << "Sunrise: " << GetSunrise() << std::endl;
+		std::cout << "Sunset: " << GetSunset() << std::endl;
 	}
 
 };
