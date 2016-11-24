@@ -4,6 +4,7 @@
 #include <fstream>
 #include <istream>
 #include <iostream>
+#include <ctime>
 
 #include <cpprest/http_client.h>
 #include <cpprest/filestream.h>
@@ -130,6 +131,15 @@ public:
 		longitude = 0.0;
 		latitude = 0.0;
 		formatted_address = "";
+	}
+
+	// return the predicted sunset time as decimal hours
+	float GetSunset() {
+	}
+
+	// return the predicted sunrise time as decimal hours
+	float GetSunrise() {
+
 	}
 
 	void PrintPrivate() {
