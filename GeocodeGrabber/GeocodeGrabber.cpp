@@ -222,7 +222,7 @@ private:
 		std::cout << "right_ascension_hours: " << right_ascension_hours << std::endl;
 
 		// calc sun declination
-		double sine_declination = 0.39782 * sin(sun_true_longitude);
+		double sine_declination = 0.39782 * d_sin(sun_true_longitude);
 		double cosine_declination = d_cos(d_asin(sine_declination));
 		std::cout << "cosine_declination: " << cosine_declination << std::endl;
 
