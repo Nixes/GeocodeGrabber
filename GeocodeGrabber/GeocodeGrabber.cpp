@@ -128,8 +128,31 @@ private:
 
 	// some simple variants of the built in trigonomic functions that use use degrees as parameters AND outputs
 	double DegToRad(double degrees) {
-		return 180 / M_PI;
+		return degrees * (180 / M_PI);
 	}
+	double RadToDeg(double radians) {
+		return radians * (180 / M_PI);
+	}
+	double d_cos(double degrees) {
+		return RadToDeg(cos(DegToRad(degrees)));
+	}
+	double d_acos(double degrees) {
+		return RadToDeg(acos(DegToRad(degrees)));
+	}
+	double d_sin(double degrees) {
+		return RadToDeg(sin(DegToRad(degrees)));
+	}
+	double d_asin(double degrees) {
+		return RadToDeg(asin(DegToRad(degrees)));
+	}
+	double d_tan(double degrees) {
+		return RadToDeg(tan(DegToRad(degrees)));
+	}
+	double d_atan(double degrees) {
+		return RadToDeg(atan(DegToRad(degrees)));
+	}
+
+
 
 	// What follows is a c++ implementation of the algorithm specified here: http://williams.best.vwh.net/sunrise_sunset_algorithm.htm
 
@@ -183,10 +206,10 @@ private:
 		double sun_mean_anomaly = GetSunMeanAnomaly(t);
 		std::cout << "sun_mean_anomaly: " << sun_mean_anomaly << std::endl;
 
-		double sun_true_longitude = sun_mean_anomaly + (1.916 * sin(sun_mean_anomaly)) + (0.020 * sin(2 * sun_mean_anomaly)) + 282.634;
+		double sun_true_longitude = sun_mean_anomaly + (1.916 * d_sin(sun_mean_anomaly)) + (0.020 * d_sin(2 * sun_mean_anomaly)) + 282.634;
 		std::cout << "sun_true_longitude: " << sun_true_longitude << std::endl;
 
-		double sun_right_ascension = atan(0.91764 * tan(sun_true_longitude));
+		double sun_right_ascension = d_atan(0.91764 * d_tan(sun_true_longitude));
 		std::cout << "sun_right_ascension: " << sun_right_ascension << std::endl;
 
 		double true_long_quadrant = (floor(sun_true_longitude / 90)) * 90;
@@ -200,19 +223,19 @@ private:
 
 		// calc sun declination
 		double sine_declination = 0.39782 * sin(sun_true_longitude);
-		double cosine_declination = cos(asin(sine_declination));
+		double cosine_declination = d_cos(d_asin(sine_declination));
 		std::cout << "cosine_declination: " << cosine_declination << std::endl;
 
 		// calc sun local hour angle
-		double cos_hour_angle = (cos(zenith) - (sine_declination * sin(latitude))) / (cosine_declination * cos(latitude));
+		double cos_hour_angle = (d_cos(zenith) - (sine_declination * d_sin(latitude))) / (cosine_declination * d_cos(latitude));
 		std::cout << "cos_hour_angle: " << cos_hour_angle << std::endl;
 
 		// calculate hours
 		double tmp_hours = 0;
 		if (calc_sunrise) {
-			tmp_hours = 360 - acos(cos_hour_angle);
+			tmp_hours = 360 - d_acos(cos_hour_angle);
 		} else {
-			tmp_hours = acos(cos_hour_angle);
+			tmp_hours = d_acos(cos_hour_angle);
 		}
 		std::cout << "tmp_hours: " << tmp_hours << std::endl;
 
