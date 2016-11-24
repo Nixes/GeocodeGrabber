@@ -5,6 +5,8 @@
 #include <istream>
 #include <iostream>
 #include <ctime>
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 #include <cpprest/http_client.h>
 #include <cpprest/filestream.h>
@@ -124,10 +126,15 @@ private:
 			.wait();
 	}
 
+	// some simple variants of the built in trigonomic functions that use use degrees as parameters AND outputs
+	double DegToRad(double degrees) {
+		return 180 / M_PI;
+	}
+
 	// What follows is a c++ implementation of the algorithm specified here: http://williams.best.vwh.net/sunrise_sunset_algorithm.htm
 
 	// TODO: Improve variable names
-	int GetDayOfYear() {
+	double GetDayOfYear() {
 		time_t c_now = time(0);
 		struct tm now;
 		localtime_s(&now, &c_now);
@@ -158,49 +165,63 @@ private:
 	}
 
 	// this is where most of the magic happens: returns sunrise time if true, sunset if false.
-	float GetLocalHours(bool calc_sunrise) {
-		const int day_of_year = GetDayOfYear();
+	double GetLocalHours(bool calc_sunrise) {
+		const double day_of_year = GetDayOfYear();
 
-		float t = 0;
+		double t = 0;
 		if (calc_sunrise) {
+			std::cout << "Calculating sunrise" << std::endl;
 			t = GetSunriseLongHour(day_of_year);
 		} else {
+			std::cout << "Calculating sunset" << std::endl;
 			t = GetSunsetLongHour(day_of_year);
 		}
+		std::cout << "t: " << t << std::endl;
 
-		const float zenith = 90.83333; // official zenith
+		const double zenith = 90.83333; // official zenith
 
-		float sun_mean_anomaly = GetSunMeanAnomaly(t);
+		double sun_mean_anomaly = GetSunMeanAnomaly(t);
+		std::cout << "sun_mean_anomaly: " << sun_mean_anomaly << std::endl;
 
-		float sun_true_longitude = sun_mean_anomaly + (1.916 * sin(sun_mean_anomaly)) + (0.020 * sin(2 * sun_mean_anomaly)) + 282.634;
+		double sun_true_longitude = sun_mean_anomaly + (1.916 * sin(sun_mean_anomaly)) + (0.020 * sin(2 * sun_mean_anomaly)) + 282.634;
+		std::cout << "sun_true_longitude: " << sun_true_longitude << std::endl;
 
-		float sun_right_ascension = atan(0.91764 * tan(sun_true_longitude));
+		double sun_right_ascension = atan(0.91764 * tan(sun_true_longitude));
+		std::cout << "sun_right_ascension: " << sun_right_ascension << std::endl;
 
-		float true_long_quadrant = (floor(sun_true_longitude / 90)) * 90;
-		float right_ascension_quadrant = (floor(sun_right_ascension / 90)) * 90;
+		double true_long_quadrant = (floor(sun_true_longitude / 90)) * 90;
+		double right_ascension_quadrant = (floor(sun_right_ascension / 90)) * 90;
 		sun_right_ascension = sun_right_ascension + (true_long_quadrant - right_ascension_quadrant);
+		std::cout << "sun_right_ascension AFTER QUAD: " << sun_right_ascension << std::endl;
 
 		// convert right ascension to hours
-		float right_ascension_hours = sun_right_ascension / 15;
+		double right_ascension_hours = sun_right_ascension / 15;
+		std::cout << "right_ascension_hours: " << right_ascension_hours << std::endl;
 
 		// calc sun declination
-		float sine_declination = 0.39782 * sin(sun_true_longitude);
-		float cosine_declination = cos(asin(sine_declination));
+		double sine_declination = 0.39782 * sin(sun_true_longitude);
+		double cosine_declination = cos(asin(sine_declination));
+		std::cout << "cosine_declination: " << cosine_declination << std::endl;
 
 		// calc sun local hour angle
-		float cos_hour_angle = (cos(zenith) - (sine_declination * sin(latitude))) / (cosine_declination * cos(latitude));
+		double cos_hour_angle = (cos(zenith) - (sine_declination * sin(latitude))) / (cosine_declination * cos(latitude));
+		std::cout << "cos_hour_angle: " << cos_hour_angle << std::endl;
 
 		// calculate hours
-		float tmp_hours = 0;
+		double tmp_hours = 0;
 		if (calc_sunrise) {
 			tmp_hours = 360 - acos(cos_hour_angle);
 		} else {
 			tmp_hours = acos(cos_hour_angle);
 		}
-		float hours = tmp_hours / 15;
+		std::cout << "tmp_hours: " << tmp_hours << std::endl;
+
+		double hours = tmp_hours / 15;
+		std::cout << "hours: " << hours << std::endl;
 
 		// calc local mean time of sunset/sunrise
-		float mean_sun_transition = hours + right_ascension_hours - (0.06571 * t) - 6.622;
+		double mean_sun_transition = hours + right_ascension_hours - (0.06571 * t) - 6.622;
+		std::cout << "mean_sun_transition: " << mean_sun_transition << std::endl;
 
 		return mean_sun_transition;
 	}
@@ -214,18 +235,21 @@ public:
 	}
 
 	// return the predicted sunset time as decimal hours
-	float GetSunset() {
+	double GetSunset() {
 		return GetLocalHours(false);
 	}
 
 	// return the predicted sunrise time as decimal hours
-	float GetSunrise() {
+	double GetSunrise() {
 		return GetLocalHours(true);
 	}
 
 	void PrintPrivate() {
 		std::cout << "Formatted address was: " << formatted_address << std::endl;
 		std::cout << "logitude: " << longitude << " latitude: " << latitude << std::endl;
+
+		std::cout << "Sunrise: " << GetSunrise() << std::endl;
+		std::cout << "Sunset: " << GetSunset() << std::endl;
 	}
 
 	void TestApi() {
@@ -236,9 +260,6 @@ public:
 	void TestIp() {
 		GetLongLatFromIp();
 		std::cout << "Day of year: " << GetDayOfYear() << std::endl;
-
-		std::cout << "Sunrise: " << GetSunrise() << std::endl;
-		std::cout << "Sunset: " << GetSunset() << std::endl;
 	}
 
 };
