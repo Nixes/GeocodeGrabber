@@ -153,17 +153,29 @@ private:
 	}
 
 
-	tm GetTimeNow() {
-		time_t c_now = time(0);
-		struct tm now;
-		localtime_s(&now, &c_now);
-		return now;
+
+	double GetUTCOffset(time_t c_now) {
+		struct tm local = *localtime(&c_now);
+		struct tm utc = *gmtime(&c_now);
+		double diff = (local.tm_hour - utc.tm_hour); //+ (local.tm_min - utc.tm_min));
+		int delta_day = local.tm_mday - utc.tm_mday;
+		if ((delta_day == 1) || (delta_day < -1)) {
+			diff += 24L;
+		}
+		else if ((delta_day == -1) || (delta_day > 1)) {
+			diff -= 24L;
+		}
+
+		return diff;
 	}
 
 	// What follows is a c++ implementation of the algorithm specified here: http://williams.best.vwh.net/sunrise_sunset_algorithm.htm
 
 	// TODO: Improve variable names
-	double GetDayOfYear(tm now) {
+	double GetDayOfYear(time_t c_now) {
+		struct tm now;
+		localtime_s(&now, &c_now);
+
 		int a = floor(275 * now.tm_mon / 9);
 		int b = floor( (now.tm_mon + 9) /12 );
 		int c = (1 + floor((now.tm_year - 4 * floor(now.tm_year / 4) + 2) / 3));
@@ -189,7 +201,9 @@ private:
 
 	// this is where most of the magic happens: returns sunrise time if true, sunset if false.
 	double GetLocalHours(bool calc_sunrise) {
-		const double day_of_year = GetDayOfYear();
+		time_t c_now = time(0);
+
+		const double day_of_year = GetDayOfYear(c_now);
 		std::cout << "day_of_year: " << day_of_year << std::endl;
 
 		float long_hour = longitude / 15;
@@ -261,6 +275,12 @@ private:
 		double utc_time = mean_sun_transition - long_hour;
 		utc_time = MakeWithinRange(0, 24, utc_time);
 		std::cout << "utc_time: " << utc_time << std::endl;
+
+		// adjust to local time
+		double utc_offset = GetUTCOffset(c_now);
+		std::cout << "utc_offset: " << utc_offset << std::endl;
+
+		double local_time = utc_time - utc_offset;
 
 		std::cout << std::endl;
 
