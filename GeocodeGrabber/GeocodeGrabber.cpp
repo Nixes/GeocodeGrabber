@@ -169,20 +169,6 @@ private:
 		return a - (b * c) + now.tm_mday - 30;
 	}
 
-	float GetSunriseLongHour(int day_of_year) {
-		float long_hour = longitude / 15;
-
-		float rising_time = day_of_year + ((6 - long_hour) / 24);
-		return rising_time;
-	}
-
-	float GetSunsetLongHour(int day_of_year) {
-		float long_hour = longitude / 15;
-
-		float setting_time = day_of_year + ((18 - long_hour) / 24);
-		return setting_time;
-	}
-
 	float GetSunMeanAnomaly(float time) {
 		return (0.9856 * time) - 3.289;
 	}
@@ -191,13 +177,15 @@ private:
 	double GetLocalHours(bool calc_sunrise) {
 		const double day_of_year = GetDayOfYear();
 
+		float long_hour = longitude / 15;
+
 		double t = 0;
 		if (calc_sunrise) {
 			std::cout << "Calculating sunrise" << std::endl;
-			t = GetSunriseLongHour(day_of_year);
+			t = day_of_year + ((6 - long_hour) / 24);;
 		} else {
 			std::cout << "Calculating sunset" << std::endl;
-			t = GetSunsetLongHour(day_of_year);
+			t = day_of_year + ((18 - long_hour) / 24);
 		}
 		std::cout << "t: " << t << std::endl;
 
