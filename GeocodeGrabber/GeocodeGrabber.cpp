@@ -173,8 +173,7 @@ private:
 
 	// TODO: Improve variable names
 	double GetDayOfYear(time_t c_now) {
-		struct tm now;
-		localtime_s(&now, &c_now);
+		struct tm now = *localtime(&c_now);
 
 		int a = floor(275 * now.tm_mon / 9);
 		int b = floor( (now.tm_mon + 9) /12 );
