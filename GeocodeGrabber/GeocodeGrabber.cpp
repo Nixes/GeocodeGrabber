@@ -280,6 +280,7 @@ private:
 		std::cout << "utc_offset: " << utc_offset << std::endl;
 
 		double local_time = utc_time + utc_offset;
+		local_time = MakeWithinRange(0,24,local_time);
 		std::cout << "local_time: " << local_time << std::endl;
 
 		std::cout << std::endl;
