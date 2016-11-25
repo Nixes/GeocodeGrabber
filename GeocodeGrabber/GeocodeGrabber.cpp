@@ -272,18 +272,19 @@ private:
 
 		// convert to utc
 		double utc_time = mean_sun_transition - long_hour;
-		utc_time = MakeWithinRange(0, 24, utc_time);
+		//utc_time = MakeWithinRange(0, 24, utc_time);
 		std::cout << "utc_time: " << utc_time << std::endl;
 
 		// adjust to local time
 		double utc_offset = GetUTCOffset(c_now);
 		std::cout << "utc_offset: " << utc_offset << std::endl;
 
-		double local_time = utc_time - utc_offset;
+		double local_time = utc_time + utc_offset;
+		std::cout << "local_time: " << local_time << std::endl;
 
 		std::cout << std::endl;
 
-		return utc_time;
+		return local_time;
 	}
 public:
 	GeocodeGrabber(std::string tmp_geocoding_api_key, std::string tmp_geolocation_api_key) {
