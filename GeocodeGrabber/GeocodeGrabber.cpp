@@ -134,22 +134,22 @@ private:
 		return radians * (180 / M_PI);
 	}
 	double d_cos(double degrees) {
-		return RadToDeg(cos(DegToRad(degrees)));
+		return cos(DegToRad(degrees));
 	}
 	double d_acos(double degrees) {
-		return RadToDeg(acos(DegToRad(degrees)));
+		return RadToDeg(acos(degrees));
 	}
 	double d_sin(double degrees) {
-		return RadToDeg(sin(DegToRad(degrees)));
+		return sin(DegToRad(degrees));
 	}
 	double d_asin(double degrees) {
-		return RadToDeg(asin(DegToRad(degrees)));
+		return RadToDeg(asin(degrees));
 	}
 	double d_tan(double degrees) {
-		return RadToDeg(tan(DegToRad(degrees)));
+		return tan(DegToRad(degrees));
 	}
 	double d_atan(double degrees) {
-		return RadToDeg(atan(DegToRad(degrees)));
+		return RadToDeg(atan(degrees));
 	}
 
 
