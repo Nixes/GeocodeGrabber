@@ -126,7 +126,7 @@ private:
 			.wait();
 	}
 
-	// some simple variants of the built in trigonomic functions that use use degrees as parameters AND outputs
+	// some simple variants of the built in trigonomic functions that use use degrees as parameters or outputs
 	double DegToRad(double degrees) {
 		return degrees * (180 / M_PI);
 	}
