@@ -153,15 +153,17 @@ private:
 	}
 
 
+	tm GetTimeNow() {
+		time_t c_now = time(0);
+		struct tm now;
+		localtime_s(&now, &c_now);
+		return now;
+	}
 
 	// What follows is a c++ implementation of the algorithm specified here: http://williams.best.vwh.net/sunrise_sunset_algorithm.htm
 
 	// TODO: Improve variable names
-	double GetDayOfYear() {
-		time_t c_now = time(0);
-		struct tm now;
-		localtime_s(&now, &c_now);
-
+	double GetDayOfYear(tm now) {
 		int a = floor(275 * now.tm_mon / 9);
 		int b = floor( (now.tm_mon + 9) /12 );
 		int c = (1 + floor((now.tm_year - 4 * floor(now.tm_year / 4) + 2) / 3));
@@ -169,13 +171,26 @@ private:
 		return a - (b * c) + now.tm_mday - 30;
 	}
 
-	float GetSunMeanAnomaly(float time) {
-		return (0.9856 * time) - 3.289;
+	double GetSunMeanAnomaly(double t) {
+		return (0.9856 * t) - 3.289;
+	}
+
+	double MakeWithinRange(double min,double max, double input) {
+		if (input > max) {
+			std::cout << "   input was OVER MAX" << std::endl;
+			return input - max;
+		}
+		if (input < min) {
+			std::cout << "   input was UNDER MIN" << std::endl;
+			return input + max;
+		}
+		return input;
 	}
 
 	// this is where most of the magic happens: returns sunrise time if true, sunset if false.
 	double GetLocalHours(bool calc_sunrise) {
 		const double day_of_year = GetDayOfYear();
+		std::cout << "day_of_year: " << day_of_year << std::endl;
 
 		float long_hour = longitude / 15;
 
@@ -194,10 +209,16 @@ private:
 		double sun_mean_anomaly = GetSunMeanAnomaly(t);
 		std::cout << "sun_mean_anomaly: " << sun_mean_anomaly << std::endl;
 
+		// note sun true longitude should be made to fit in [0,360 range]
 		double sun_true_longitude = sun_mean_anomaly + (1.916 * d_sin(sun_mean_anomaly)) + (0.020 * d_sin(2 * sun_mean_anomaly)) + 282.634;
+		// adjust to be in range of [0,360]
+		sun_true_longitude = MakeWithinRange(0, 360, sun_true_longitude);
 		std::cout << "sun_true_longitude: " << sun_true_longitude << std::endl;
 
+
 		double sun_right_ascension = d_atan(0.91764 * d_tan(sun_true_longitude));
+		// adjust to be in range of [0,360]
+		sun_right_ascension = MakeWithinRange(0, 360, sun_right_ascension);
 		std::cout << "sun_right_ascension: " << sun_right_ascension << std::endl;
 
 		double true_long_quadrant = (floor(sun_true_longitude / 90)) * 90;
@@ -211,11 +232,13 @@ private:
 
 		// calc sun declination
 		double sine_declination = 0.39782 * d_sin(sun_true_longitude);
+		std::cout << "sine_declination: " << sine_declination << std::endl;
+
 		double cosine_declination = d_cos(d_asin(sine_declination));
 		std::cout << "cosine_declination: " << cosine_declination << std::endl;
 
 		// calc sun local hour angle
-		double cos_hour_angle = (d_cos(zenith) - (sine_declination * d_sin(latitude))) / (cosine_declination * d_cos(latitude));
+		double cos_hour_angle = ( d_cos(zenith) - (sine_declination * d_sin(latitude) ) ) / (cosine_declination * d_cos(latitude) );
 		std::cout << "cos_hour_angle: " << cos_hour_angle << std::endl;
 
 		// calculate hours
@@ -234,7 +257,14 @@ private:
 		double mean_sun_transition = hours + right_ascension_hours - (0.06571 * t) - 6.622;
 		std::cout << "mean_sun_transition: " << mean_sun_transition << std::endl;
 
-		return mean_sun_transition;
+		// convert to utc
+		double utc_time = mean_sun_transition - long_hour;
+		utc_time = MakeWithinRange(0, 24, utc_time);
+		std::cout << "utc_time: " << utc_time << std::endl;
+
+		std::cout << std::endl;
+
+		return utc_time;
 	}
 public:
 	GeocodeGrabber(std::string tmp_geocoding_api_key, std::string tmp_geolocation_api_key) {
@@ -260,6 +290,7 @@ public:
 		std::cout << "logitude: " << longitude << " latitude: " << latitude << std::endl;
 
 		std::cout << "Sunrise: " << GetSunrise() << std::endl;
+		std::cout << std::endl;
 		std::cout << "Sunset: " << GetSunset() << std::endl;
 	}
 
@@ -270,7 +301,6 @@ public:
 
 	void TestIp() {
 		GetLongLatFromIp();
-		std::cout << "Day of year: " << GetDayOfYear() << std::endl;
 	}
 
 };
