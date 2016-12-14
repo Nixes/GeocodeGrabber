@@ -29,7 +29,10 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GeocodeGrabber.cpp">
+    <ClCompile Include="example.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeocodeGrabber.hpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
