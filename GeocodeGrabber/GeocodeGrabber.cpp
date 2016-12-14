@@ -128,7 +128,7 @@ private:
 
 	// some simple variants of the built in trigonomic functions that use use degrees as parameters or outputs
 	double DegToRad(double degrees) {
-		return degrees * (180 / M_PI);
+		return degrees * (M_PI / 180);
 	}
 	double RadToDeg(double radians) {
 		return radians * (180 / M_PI);
@@ -308,7 +308,7 @@ public:
 
 	void PrintPrivate() {
 		std::cout << "Formatted address was: " << formatted_address << std::endl;
-		std::cout << "logitude: " << longitude << " latitude: " << latitude << std::endl;
+		std::cout << "longitude: " << longitude << " latitude: " << latitude << std::endl;
 
 		std::cout << "Sunrise: " << GetSunrise() << std::endl;
 		std::cout << std::endl;
