@@ -188,11 +188,9 @@ private:
 
 	double MakeWithinRange(double min,double max, double input) {
 		if (input > max) {
-			std::cout << "   input was OVER MAX" << std::endl;
 			return input - max;
 		}
 		if (input < min) {
-			std::cout << "   input was UNDER MIN" << std::endl;
 			return input + max;
 		}
 		return input;
