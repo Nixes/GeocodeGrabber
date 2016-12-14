@@ -272,13 +272,14 @@ private:
 
 		// convert to utc
 		double utc_time = mean_sun_transition - long_hour;
-		//utc_time = MakeWithinRange(0, 24, utc_time);
+		utc_time = MakeWithinRange(0, 24, utc_time);
 		std::cout << "utc_time: " << utc_time << std::endl;
 
-		// adjust to local time
+		// determine local machines UTC offset
 		double utc_offset = GetUTCOffset(c_now);
 		std::cout << "utc_offset: " << utc_offset << std::endl;
 
+		// adjust to local time
 		double local_time = utc_time + utc_offset;
 		local_time = MakeWithinRange(0,24,local_time);
 		std::cout << "local_time: " << local_time << std::endl;
