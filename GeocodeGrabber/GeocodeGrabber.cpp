@@ -11,6 +11,8 @@
 #include <cpprest/http_client.h>
 #include <cpprest/filestream.h>
 
+//#define DEBUG
+
 using namespace utility;                    // Common utilities like string conversions
 using namespace web;                        // Common features like URIs.
 using namespace web::http;                  // Common HTTP functionality
@@ -33,6 +35,10 @@ private:
 				auto location = response.at(U("location"));
 				longitude = location.at(U("lng")).as_double();
 				latitude = location.at(U("lat")).as_double();
+
+				#ifdef DEBUG
+				std::cout << "longitude: " << longitude << " latitude: " << latitude << std::endl;
+				#endif
 			}
 			catch (json::json_exception const & e) {
 				std::cout << "Failed to parse location " << e.what() << std::endl;
@@ -49,6 +55,9 @@ private:
 				auto formatted_address_t = results.at(U("formatted_address")).as_string();
 				// convert this address into something usefull
 				formatted_address = utility::conversions::to_utf8string(formatted_address_t);
+				#ifdef DEBUG
+				std::cout << "Formatted address was: " << formatted_address << std::endl;
+				#endif
 			} catch (json::json_exception const & e) {
 				std::cout << "Exception parsing google api result " << e.what() << std::endl;
 			}
@@ -90,39 +99,6 @@ private:
 					std::cout << e.what() << std::endl;
 				}
 			})
-			.wait();
-	}
-
-	void GetLongLatFromIp() {
-		// Create http_client to send the request.
-		http_client client(U("https://www.googleapis.com/geolocation/v1/geolocate"));
-
-		// Build request URI and start the request.
-		uri_builder builder = uri_builder();
-		builder.append_query(U("key"), geolocation_api_key.c_str());
-
-		client
-			.request(methods::POST, builder.to_string())
-			// continue when the response is available
-			.then([](http_response response) -> pplx::task <json::value> {
-			// if the status is OK extract the body of the response into a JSON value
-			// works only when the content type is application\json
-			if (response.status_code() == status_codes::OK) {
-				return response.extract_json();
-			}
-			return pplx::task_from_result(json::value());
-		})
-			// continue when the JSON value is available
-			.then([this](pplx::task<json::value> previousTask) {
-			// get the JSON value from the task and display content from it
-			try {
-				json::value const & v = previousTask.get();
-				ParseLocation(v);
-			}
-			catch (http_exception const & e) {
-				std::cout << e.what() << std::endl;
-			}
-		})
 			.wait();
 	}
 
@@ -197,60 +173,83 @@ private:
 	}
 
 	// this is where most of the magic happens: returns sunrise time if true, sunset if false.
-	double GetLocalHours(bool calc_sunrise) {
+	double GetSunriseSunsetTime(bool calc_sunrise) {
 		time_t c_now = time(0);
 
 		const double day_of_year = GetDayOfYear(c_now);
-		std::cout << "day_of_year: " << day_of_year << std::endl;
+		#ifdef DEBUG 
+		std::cout << "day_of_year: " << day_of_year << std::endl; 
+		#endif
 
 		float long_hour = longitude / 15;
 
 		double t = 0;
 		if (calc_sunrise) {
+			#ifdef DEBUG 
 			std::cout << "Calculating sunrise" << std::endl;
+			#endif
 			t = day_of_year + ((6 - long_hour) / 24);;
 		} else {
+			#ifdef DEBUG 
 			std::cout << "Calculating sunset" << std::endl;
+			#endif
 			t = day_of_year + ((18 - long_hour) / 24);
 		}
+		#ifdef DEBUG 
 		std::cout << "t: " << t << std::endl;
+		#endif
 
 		const double zenith = 90.83333; // official zenith
 
 		double sun_mean_anomaly = GetSunMeanAnomaly(t);
+		#ifdef DEBUG 
 		std::cout << "sun_mean_anomaly: " << sun_mean_anomaly << std::endl;
+		#endif
 
 		// note sun true longitude should be made to fit in [0,360 range]
 		double sun_true_longitude = sun_mean_anomaly + (1.916 * d_sin(sun_mean_anomaly)) + (0.020 * d_sin(2 * sun_mean_anomaly)) + 282.634;
 		// adjust to be in range of [0,360]
 		sun_true_longitude = MakeWithinRange(0, 360, sun_true_longitude);
+		#ifdef DEBUG 
 		std::cout << "sun_true_longitude: " << sun_true_longitude << std::endl;
-
+		#endif
 
 		double sun_right_ascension = d_atan(0.91764 * d_tan(sun_true_longitude));
 		// adjust to be in range of [0,360]
 		sun_right_ascension = MakeWithinRange(0, 360, sun_right_ascension);
+		#ifdef DEBUG 
 		std::cout << "sun_right_ascension: " << sun_right_ascension << std::endl;
+		#endif
 
 		double true_long_quadrant = (floor(sun_true_longitude / 90)) * 90;
 		double right_ascension_quadrant = (floor(sun_right_ascension / 90)) * 90;
 		sun_right_ascension = sun_right_ascension + (true_long_quadrant - right_ascension_quadrant);
+		#ifdef DEBUG 
 		std::cout << "sun_right_ascension AFTER QUAD: " << sun_right_ascension << std::endl;
+		#endif
 
 		// convert right ascension to hours
 		double right_ascension_hours = sun_right_ascension / 15;
+		#ifdef DEBUG 
 		std::cout << "right_ascension_hours: " << right_ascension_hours << std::endl;
+		#endif
 
 		// calc sun declination
 		double sine_declination = 0.39782 * d_sin(sun_true_longitude);
+		#ifdef DEBUG 
 		std::cout << "sine_declination: " << sine_declination << std::endl;
+		#endif
 
 		double cosine_declination = d_cos(d_asin(sine_declination));
+		#ifdef DEBUG 
 		std::cout << "cosine_declination: " << cosine_declination << std::endl;
+		#endif
 
 		// calc sun local hour angle
 		double cos_hour_angle = ( d_cos(zenith) - (sine_declination * d_sin(latitude) ) ) / (cosine_declination * d_cos(latitude) );
+		#ifdef DEBUG 
 		std::cout << "cos_hour_angle: " << cos_hour_angle << std::endl;
+		#endif
 
 		// calculate hours
 		double tmp_hours = 0;
@@ -259,30 +258,40 @@ private:
 		} else {
 			tmp_hours = d_acos(cos_hour_angle);
 		}
+		#ifdef DEBUG 
 		std::cout << "tmp_hours: " << tmp_hours << std::endl;
+		#endif
 
 		double hours = tmp_hours / 15;
+		#ifdef DEBUG 
 		std::cout << "hours: " << hours << std::endl;
+		#endif
 
 		// calc local mean time of sunset/sunrise
 		double mean_sun_transition = hours + right_ascension_hours - (0.06571 * t) - 6.622;
+		#ifdef DEBUG 
 		std::cout << "mean_sun_transition: " << mean_sun_transition << std::endl;
+		#endif
 
 		// convert to utc
 		double utc_time = mean_sun_transition - long_hour;
 		utc_time = MakeWithinRange(0, 24, utc_time);
+		#ifdef DEBUG 
 		std::cout << "utc_time: " << utc_time << std::endl;
+		#endif
 
 		// determine local machines UTC offset
 		double utc_offset = GetUTCOffset(c_now);
+		#ifdef DEBUG 
 		std::cout << "utc_offset: " << utc_offset << std::endl;
+		#endif
 
 		// adjust to local time
 		double local_time = utc_time + utc_offset;
 		local_time = MakeWithinRange(0,24,local_time);
-		std::cout << "local_time: " << local_time << std::endl;
-
-		std::cout << std::endl;
+		#ifdef DEBUG 
+		std::cout << "local_time: " << local_time << std::endl << std::endl;
+		#endif
 
 		return local_time;
 	}
@@ -295,34 +304,53 @@ public:
 		formatted_address = "";
 	}
 
+	void GetLongLatFromIp() {
+		// Create http_client to send the request.
+		http_client client(U("https://www.googleapis.com/geolocation/v1/geolocate"));
+
+		// Build request URI and start the request.
+		uri_builder builder = uri_builder();
+		builder.append_query(U("key"), geolocation_api_key.c_str());
+
+		client
+			.request(methods::POST, builder.to_string())
+			// continue when the response is available
+			.then([](http_response response) -> pplx::task <json::value> {
+			// if the status is OK extract the body of the response into a JSON value
+			// works only when the content type is application\json
+			if (response.status_code() == status_codes::OK) {
+				return response.extract_json();
+			}
+			return pplx::task_from_result(json::value());
+		})
+			// continue when the JSON value is available
+			.then([this](pplx::task<json::value> previousTask) {
+			// get the JSON value from the task and display content from it
+			try {
+				json::value const & v = previousTask.get();
+				ParseLocation(v);
+			}
+			catch (http_exception const & e) {
+				std::cout << e.what() << std::endl;
+			}
+		})
+			.wait();
+	}
+
 	// return the predicted sunset time as decimal hours
 	double GetSunset() {
-		return GetLocalHours(false);
+		return GetSunriseSunsetTime(false);
 	}
 
 	// return the predicted sunrise time as decimal hours
 	double GetSunrise() {
-		return GetLocalHours(true);
-	}
-
-	void PrintPrivate() {
-		std::cout << "Formatted address was: " << formatted_address << std::endl;
-		std::cout << "longitude: " << longitude << " latitude: " << latitude << std::endl;
-
-		std::cout << "Sunrise: " << GetSunrise() << std::endl;
-		std::cout << std::endl;
-		std::cout << "Sunset: " << GetSunset() << std::endl;
+		return GetSunriseSunsetTime(true);
 	}
 
 	void TestApi() {
 		std::string address = "John St, Hawthorn VIC";
 		GetLongLatFromAddress(address);
 	}
-
-	void TestIp() {
-		GetLongLatFromIp();
-	}
-
 };
 
 int main() {
@@ -330,9 +358,11 @@ int main() {
 
 	//geocode_test.TestApi();
 
-	geocode_test.TestIp();
+	geocode_test.GetLongLatFromIp();
 
-	geocode_test.PrintPrivate();
+	std::cout << "Sunrise: " << geocode_test.GetSunrise() << std::endl;
+	std::cout << std::endl;
+	std::cout << "Sunset: " << geocode_test.GetSunset() << std::endl;
 
 	system("pause");
 	return 0;
