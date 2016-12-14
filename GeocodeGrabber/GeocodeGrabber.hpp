@@ -346,4 +346,11 @@ public:
 	double GetSunrise() {
 		return GetSunriseSunsetTime(true);
 	}
+
+	double GetLongitude() {
+		return longitude;
+	}
+	double GetLatitude() {
+		return latitude;
+	}
 };
